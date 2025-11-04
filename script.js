@@ -1,13 +1,8 @@
 const gameBoard = (function () {
   const board = new Array(3);
-  for (let i = 0; i < 3; i++) {
-    board[i] = new Array(3).fill("");
-  }
 
-  let mark;
-
-  const getBoard = () => console.table(board);
-  const isFalsy = (n) => (!n && n !== 0) || n < 0;
+  const isValid = (n) => Number.isInteger(n) && isBound(n);
+  const isBound = (n) => 0 <= n && n < 3;
 
   const isRowStreak = (y, mark) => {
     for (let i = 0; i < 3; i++) {
@@ -60,45 +55,47 @@ const gameBoard = (function () {
     }
   };
 
-  const markX = (y, x) => {
-    if (isFalsy(y) || isFalsy(x)) {
-      throw Error("Provide both x and y properly");
+  const getBoard = () => console.table(board);
+
+  const setBoard = () => {
+    for (let i = 0; i < 3; i++) {
+      board[i] = new Array(3).fill("");
+    }
+    getBoard();
+  };
+
+  const markSquare = (y, x, player) => {
+    if (!isValid(y) || !isValid(x)) {
+      throw new Error("x and y must be an integer between 0 and 2");
     }
 
     if (board[y][x]) {
-      throw Error("Cannot mark the square since it's already marked");
+      throw new Error("Cannot mark the square since it's already marked");
     }
 
-    mark = "X";
+    mark = player.getMark();
     board[y][x] = mark;
     getBoard();
     if (isStreak(y, x, mark)) {
-      console.log("X win!");
+      console.log(`${player.getName()} win!`);
     }
   };
 
-  const markO = (y, x) => {
-    if (isFalsy(y) || isFalsy(x)) {
-      throw Error("Provide both x and y properly");
-    }
-
-    if (board[y][x]) {
-      throw Error("Cannot mark the square since it's already marked");
-    }
-
-    mark = "O";
-    board[y][x] = mark;
-    getBoard();
-    if (isStreak(y, x, mark)) {
-      console.log("O win!");
-    }
-  };
-
-  getBoard();
+  setBoard();
 
   return {
     getBoard,
-    markX,
-    markO,
+    setBoard,
+    markSquare,
   };
 })();
+
+const createPlayer = function (name, mark) {
+  const getName = () => name;
+  const getMark = () => mark;
+
+  return {
+    getName,
+    getMark,
+  };
+};
