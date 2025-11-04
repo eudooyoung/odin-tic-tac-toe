@@ -55,13 +55,12 @@ const gameBoard = (function () {
     }
   };
 
-  const getBoard = () => console.table(board);
+  const getBoard = () => board;
 
   const setBoard = () => {
     for (let i = 0; i < 3; i++) {
       board[i] = new Array(3).fill("");
     }
-    getBoard();
   };
 
   const markSquare = (y, x, player) => {
@@ -90,12 +89,45 @@ const gameBoard = (function () {
   };
 })();
 
-const createPlayer = function (name, mark) {
-  const getName = () => name;
-  const getMark = () => mark;
+const flowController = (function () {
+  const players = new Array();
+
+  const isDuplicate = (name, mark) => {
+    return players.some(
+      (player) => player.getName() === name || player.getMark === mark
+    );
+  };
+
+  const startGame = () => gameBoard.getBoard();
+  const resetGame = () => {
+    gameBoard.setBoard();
+    gameBoard.getBoard();
+  };
+
+  const createPlayer = (name, mark) => {
+    if (isDuplicate(name, mark)) {
+      throw new Error("Name or mark already taken");
+    }
+
+    const getName = () => name;
+    const getMark = () => mark;
+    const newPlayer = { getName, getMark };
+
+    players.push(newPlayer);
+
+    return newPlayer;
+  };
+
+  const getPlayers = () => players;
 
   return {
-    getName,
-    getMark,
+    startGame,
+    resetGame,
+    createPlayer,
+    getPlayers,
   };
-};
+})();
+
+const domController = (function () {
+
+})();
