@@ -5,12 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tic Tac Toe</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Edu+QLD+Hand:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
     <script src="script.js" defer></script>
   </head>
   <body>
     <div class="container">
-      <div class="header">header</div>
-      <div class="main">main</div>
+      <div class="header"><h1>Tic Tac Toe</h1></div>
+      <div class="main">
+        <div class="form-container">
+          <form action="" class="register-player">
+            <div class="title player-x">Player X</div>
+            <div class="name player-x">
+              <label for="player-x">Name:</label>
+              <input id="player-x" type="text" required />
+            </div>
+            <div class="title player-o">Player O</div>
+            <div class="name player-o">
+              <label for="player-o">Name:</label>
+              <input id="player-o" type="text" required />
+            </div>
+            <button class="button start">Game Start!</button>
+          </form>
+          <!-- <button class="button select-mark">X</button> -->
+          <!-- <button class="button select-mark">O</button> -->
+        </div>
+        <div class="board-container">
+          <div class="player-info"></div>
+          <div class="board">
+            <div class="square row-0 col-0"></div>
+            <div class="square row-0 col-1"></div>
+            <div class="square row-0 col-2"></div>
+            <div class="square row-1 col-0"></div>
+            <div class="square row-1 col-1"></div>
+            <div class="square row-1 col-2"></div>
+            <div class="square row-2 col-0"></div>
+            <div class="square row-2 col-1"></div>
+            <div class="square row-2 col-2"></div>
+          </div>
+        </div>
+      </div>
       <div class="footer">footer</div>
     </div>
   </body>
