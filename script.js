@@ -91,7 +91,6 @@ const gameBoard = (function () {
 
 const flowController = (function () {
   const players = new Array();
-  let turn = null;
   let playerInfo = "";
 
   const startGame = () => gameBoard.setBoard();
@@ -100,33 +99,34 @@ const flowController = (function () {
     gameBoard.getBoard();
   };
 
-  const setPlayer = (name, mark) => {
+  const createPlayer = (name, mark, turn) => {
     if (isDuplicate(name, mark)) {
       throw new Error("Name or mark already taken");
     }
 
     const getName = () => name;
     const getMark = () => mark;
-    const newPlayer = { getName, getMark };
+    const getTurn = () => turn;
+    const setTurn = (turn) => {
+      turn = turn;
+      playerInfo = `${name}'s turn (${mark})`;
+    };
+    const newPlayer = { getName, getMark, getTurn, setTurn };
 
     players.push(newPlayer);
   };
+
   const getPlayerByName = (name) =>
     players.find((player) => player.name === name);
   const getPlayerByMark = (mark) =>
     players.find((player) => player.mark === mark);
+  const getPlayerByTurn = () => players.find((player) => player.turn === true);
+
   const getPlayers = () => players;
 
-  const setPlayerInfo = (player) => {
-    playerInfo = `${player.getName()}'s turn (${player.getMark()})`;
-  };
-  const getPlayerInfo = () => playerInfo;
-
-  const setTurn = (player) => {
-    turn = player;
-    setPlayerInfo(player);
-  };
   const getTurn = () => turn;
+
+  const getPlayerInfo = () => playerInfo;
 
   const isDuplicate = (name, mark) => {
     return players.some(
@@ -137,13 +137,12 @@ const flowController = (function () {
   return {
     startGame,
     resetGame,
-    setPlayer,
+    createPlayer,
     getPlayerByName,
     getPlayerByMark,
+    getPlayerByTurn,
     getPlayers,
-    setTurn,
     getTurn,
-    setPlayerInfo,
     getPlayerInfo,
   };
 })();
@@ -163,12 +162,12 @@ const domController = (function () {
     const playerXName = document.querySelector("#player-x").value || "Player X";
     const playerOName = document.querySelector("#player-o").value || "Player O";
 
-    flowController.setPlayer(playerXName, "X");
-    flowController.setPlayer(playerOName, "O");
+    flowController.createPlayer(playerXName, "X", false);
+    flowController.createPlayer(playerOName, "O", false);
 
     const playerX = flowController.getPlayerByMark("X");
+    playerX.setTurn();
 
-    flowController.setTurn(playerX);
     playerInfo.textContent = flowController.getPlayerInfo();
 
     formContainer.style.display = "none";
@@ -180,12 +179,11 @@ const domController = (function () {
       const classNames = square.getAttribute("class").split(" ");
       const row = Number(classNames[1].at(-1));
       const col = Number(classNames[2].at(-1));
-      const player = flowController.getTurn();
+      const player = flowController.getPlayerByTurn();
 
       gameBoard.markSquare(row, col, player);
       square.textContent = boardData[row][col];
 
-      flowController.setTurn();
     });
   });
 })();
