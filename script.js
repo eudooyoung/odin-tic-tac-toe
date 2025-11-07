@@ -91,7 +91,6 @@ const gameBoard = (function () {
 
 const flowController = (function () {
   const players = new Array();
-  let playerInfo = "";
 
   const startGame = () => gameBoard.setBoard();
   const resetGame = () => {
@@ -103,34 +102,63 @@ const flowController = (function () {
     if (isDuplicate(name, mark)) {
       throw new Error("Name or mark already taken");
     }
+    let _turn = Boolean(turn);
 
     const getName = () => name;
     const getMark = () => mark;
-    const getTurn = () => turn;
-    const setTurn = (turn) => {
-      turn = turn;
-      playerInfo = `${name}'s turn (${mark})`;
-    };
-    const newPlayer = { getName, getMark, getTurn, setTurn };
+    const isTurn = () => _turn;
+    const setTurn = (newTurn) => (_turn = Boolean(newTurn));
 
-    players.push(newPlayer);
+    const player = { getName, getMark, isTurn, setTurn };
+
+    players.push(player);
   };
 
   const getPlayerByName = (name) =>
-    players.find((player) => player.name === name);
+    players.find((player) => player.getName() === name);
+
   const getPlayerByMark = (mark) =>
-    players.find((player) => player.mark === mark);
-  const getPlayerByTurn = () => players.find((player) => player.turn === true);
+    players.find((player) => player.getMark() === mark);
+
+  const getPlayerByTurn = (turn) =>
+    players.find((player) => player.isTurn() === Boolean(turn));
 
   const getPlayers = () => players;
 
-  const getTurn = () => turn;
+  const getPlayerInfo = () => {
+    const player = getPlayerByTurn(true);
+    return `${player.getName()}'s turn: ${player.getMark()}`;
+  };
 
-  const getPlayerInfo = () => playerInfo;
+  const createTurn = () => {
+    let currentPlayer = null;
+    let nextPlayer = null;
+
+    const setCurrentPlayer = () => (currentPlayer = getPlayerByTurn(true));
+    const getCurrentPlayer = () => currentPlayer;
+    const setNextPlayer = () => (nextPlayer = getPlayerByTurn(false));
+    const getNextPlayer = () => nextPlayer;
+
+    const toggle = () => {
+      currentPlayer.setTurn(false);
+      nextPlayer.setTurn(true);
+
+      setCurrentPlayer();
+      setNextPlayer();
+    };
+
+    return {
+      setCurrentPlayer,
+      getCurrentPlayer,
+      setNextPlayer,
+      getNextPlayer,
+      toggle,
+    };
+  };
 
   const isDuplicate = (name, mark) => {
     return players.some(
-      (player) => player.getName() === name || player.getMark === mark
+      (player) => player.getName() === name || player.getMark() === mark
     );
   };
 
@@ -142,8 +170,8 @@ const flowController = (function () {
     getPlayerByMark,
     getPlayerByTurn,
     getPlayers,
-    getTurn,
     getPlayerInfo,
+    createTurn,
   };
 })();
 
@@ -154,7 +182,7 @@ const domController = (function () {
   const playerInfo = document.querySelector(".player-info");
   const board = document.querySelector(".board");
   const boardData = gameBoard.getBoard();
-  const players = gameBoard.getPlayers();
+  let turn = flowController.createTurn();
 
   startButton.addEventListener("click", (e) => {
     e.preventDefault();
@@ -162,11 +190,11 @@ const domController = (function () {
     const playerXName = document.querySelector("#player-x").value || "Player X";
     const playerOName = document.querySelector("#player-o").value || "Player O";
 
-    flowController.createPlayer(playerXName, "X", false);
+    flowController.createPlayer(playerXName, "X", true);
     flowController.createPlayer(playerOName, "O", false);
 
-    const playerX = flowController.getPlayerByMark("X");
-    playerX.setTurn();
+    turn.setCurrentPlayer();
+    turn.setNextPlayer();
 
     playerInfo.textContent = flowController.getPlayerInfo();
 
@@ -179,11 +207,13 @@ const domController = (function () {
       const classNames = square.getAttribute("class").split(" ");
       const row = Number(classNames[1].at(-1));
       const col = Number(classNames[2].at(-1));
-      const player = flowController.getPlayerByTurn();
+      const currentPlayer = turn.getCurrentPlayer();
 
-      gameBoard.markSquare(row, col, player);
+      gameBoard.markSquare(row, col, currentPlayer);
       square.textContent = boardData[row][col];
 
+      turn.toggle();
+      playerInfo.textContent = flowController.getPlayerInfo();
     });
   });
 })();
