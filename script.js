@@ -3,6 +3,17 @@ const gameBoard = (function () {
 
   const isValid = (n) => Number.isInteger(n) && isBound(n);
   const isBound = (n) => 0 <= n && n < 3;
+  const isBoardFull = () => {
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (board[i][j] === "") {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
 
   const isRowStreak = (y, mark) => {
     for (let i = 0; i < 3; i++) {
@@ -74,9 +85,8 @@ const gameBoard = (function () {
 
     mark = player.getMark();
     board[y][x] = mark;
-    getBoard();
     if (isStreak(y, x, mark)) {
-      console.log(`${player.getName()} win!`);
+      return flowController.endGame();
     }
   };
 
@@ -86,16 +96,22 @@ const gameBoard = (function () {
     getBoard,
     setBoard,
     markSquare,
+    isBoardFull,
   };
 })();
 
 const flowController = (function () {
   const players = new Array();
+  let isGameEnd = false;
 
   const startGame = () => gameBoard.setBoard();
   const resetGame = () => {
     gameBoard.setBoard();
     gameBoard.getBoard();
+  };
+  const endGame = () => {
+    isGameEnd = true;
+    return isGameEnd;
   };
 
   const createPlayer = (name, mark, turn) => {
@@ -112,6 +128,8 @@ const flowController = (function () {
     const player = { getName, getMark, isTurn, setTurn };
 
     players.push(player);
+
+    return player;
   };
 
   const getPlayerByName = (name) =>
@@ -128,6 +146,11 @@ const flowController = (function () {
   const getPlayerInfo = () => {
     const player = getPlayerByTurn(true);
     return `${player.getName()}'s turn: ${player.getMark()}`;
+  };
+
+  const getGameResult = () => {
+    const player = getPlayerByTurn(true);
+    return `${player.getName()} Win!`;
   };
 
   const createTurn = () => {
@@ -165,12 +188,14 @@ const flowController = (function () {
   return {
     startGame,
     resetGame,
+    endGame,
     createPlayer,
     getPlayerByName,
     getPlayerByMark,
     getPlayerByTurn,
     getPlayers,
     getPlayerInfo,
+    getGameResult,
     createTurn,
   };
 })();
@@ -183,6 +208,7 @@ const domController = (function () {
   const board = document.querySelector(".board");
   const boardData = gameBoard.getBoard();
   let turn = flowController.createTurn();
+  
 
   startButton.addEventListener("click", (e) => {
     e.preventDefault();
@@ -203,17 +229,25 @@ const domController = (function () {
   });
 
   board.childNodes.forEach((square) => {
-    square.addEventListener("click", () => {
+    square.addEventListener("click", function handleMarkingSquare() {
       const classNames = square.getAttribute("class").split(" ");
       const row = Number(classNames[1].at(-1));
       const col = Number(classNames[2].at(-1));
       const currentPlayer = turn.getCurrentPlayer();
+      const result = gameBoard.markSquare(row, col, currentPlayer);
 
-      gameBoard.markSquare(row, col, currentPlayer);
       square.textContent = boardData[row][col];
 
-      turn.toggle();
-      playerInfo.textContent = flowController.getPlayerInfo();
+      if (result === true && gameBoard.isBoardFull()) {
+        playerInfo.textContent = "Draw!";
+        square.removeEventListener("click", handleMarkingSquare);
+      } else if (result === true) {
+        playerInfo.textContent = flowController.getGameResult();
+        square.removeEventListener("click", handleMarkingSquare);
+      } else {
+        turn.toggle();
+        playerInfo.textContent = flowController.getPlayerInfo();
+      }
     });
   });
 })();
