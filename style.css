@@ -2,6 +2,7 @@
   --grass-green: #143224;
   --smoky-blue: #c2cde5;
   --light-lemon: #ffffd8;
+  --bold-yellow: #f7ed4c;
 }
 
 * {
@@ -158,6 +159,17 @@ form .name input:focus {
   font-size: 2rem;
   font-weight: 500;
   letter-spacing: 0.1rem;
+}
+
+.player-info.win {
+  color: var(--light-lemon);
+  text-shadow: 1px 1px 10px var(--bold-yellow);
+  font-weight: 700;
+}
+
+.player-info.draw {
+  color: grey;
+  font-weight: 700;
 }
 
 .board {

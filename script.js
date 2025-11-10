@@ -85,8 +85,15 @@ const gameBoard = (function () {
 
     mark = player.getMark();
     board[y][x] = mark;
+
     if (isStreak(y, x, mark)) {
-      return flowController.endGame();
+      flowController.endGame();
+      flowController.setWinner(player);
+      return;
+    }
+
+    if (isBoardFull()) {
+      flowController.endGame();
     }
   };
 
@@ -102,17 +109,18 @@ const gameBoard = (function () {
 
 const flowController = (function () {
   const players = new Array();
-  let isGameEnd = false;
+  let isGameRunning = true;
+  let winner = null;
 
-  const startGame = () => gameBoard.setBoard();
+  const startGame = () => (isGameRunning = true);
+  const endGame = () => (isGameRunning = false);
   const resetGame = () => {
     gameBoard.setBoard();
-    gameBoard.getBoard();
+    players.length = 0;
+    isGameRunning = true;
+    winner = null;
   };
-  const endGame = () => {
-    isGameEnd = true;
-    return isGameEnd;
-  };
+  const getGameStatus = () => isGameRunning;
 
   const createPlayer = (name, mark, turn) => {
     if (isDuplicate(name, mark)) {
@@ -148,10 +156,8 @@ const flowController = (function () {
     return `${player.getName()}'s turn: ${player.getMark()}`;
   };
 
-  const getGameResult = () => {
-    const player = getPlayerByTurn(true);
-    return `${player.getName()} Win!`;
-  };
+  const setWinner = (player) => (winner = player);
+  const getWinner = () => winner;
 
   const createTurn = () => {
     let currentPlayer = null;
@@ -189,13 +195,15 @@ const flowController = (function () {
     startGame,
     resetGame,
     endGame,
+    getGameStatus,
     createPlayer,
     getPlayerByName,
     getPlayerByMark,
     getPlayerByTurn,
     getPlayers,
     getPlayerInfo,
-    getGameResult,
+    setWinner,
+    getWinner,
     createTurn,
   };
 })();
@@ -208,7 +216,10 @@ const domController = (function () {
   const board = document.querySelector(".board");
   const boardData = gameBoard.getBoard();
   let turn = flowController.createTurn();
-  
+  let isListenerActive = true;
+
+  const emptySquare = () =>
+    board.childNodes.forEach((square) => (square.textContent = ""));
 
   startButton.addEventListener("click", (e) => {
     e.preventDefault();
@@ -230,23 +241,41 @@ const domController = (function () {
 
   board.childNodes.forEach((square) => {
     square.addEventListener("click", function handleMarkingSquare() {
+      if (!isListenerActive) {
+        flowController.resetGame();
+        emptySquare();
+        playerInfo.classList.remove("win", "draw");
+        document.querySelector("#player-x").value = ""
+        document.querySelector("#player-o").value = ""
+        isListenerActive = true;
+
+        formContainer.style.display = "block";
+        boardContainer.style.display = "none";
+        return;
+      }
+
       const classNames = square.getAttribute("class").split(" ");
       const row = Number(classNames[1].at(-1));
       const col = Number(classNames[2].at(-1));
       const currentPlayer = turn.getCurrentPlayer();
-      const result = gameBoard.markSquare(row, col, currentPlayer);
 
+      gameBoard.markSquare(row, col, currentPlayer);
       square.textContent = boardData[row][col];
 
-      if (result === true && gameBoard.isBoardFull()) {
-        playerInfo.textContent = "Draw!";
-        square.removeEventListener("click", handleMarkingSquare);
-      } else if (result === true) {
-        playerInfo.textContent = flowController.getGameResult();
-        square.removeEventListener("click", handleMarkingSquare);
-      } else {
+      if (flowController.getGameStatus()) {
         turn.toggle();
         playerInfo.textContent = flowController.getPlayerInfo();
+      } else {
+        if (flowController.getWinner()) {
+          playerInfo.textContent = `${flowController
+            .getWinner()
+            .getName()} Win!`;
+          playerInfo.classList.add("win");
+        } else {
+          playerInfo.textContent = "Draw!";
+          playerInfo.classList.add("draw");
+        }
+        isListenerActive = false;
       }
     });
   });
