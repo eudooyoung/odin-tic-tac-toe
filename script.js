@@ -83,7 +83,7 @@ const gameBoard = (function () {
       throw new Error("Cannot mark the square since it's already marked");
     }
 
-    mark = player.getMark();
+    const mark = player.getMark();
     board[y][x] = mark;
 
     if (isStreak(y, x, mark)) {
@@ -213,13 +213,13 @@ const domController = (function () {
   const startButton = document.querySelector(".button.start");
   const boardContainer = document.querySelector(".board-container");
   const playerInfo = document.querySelector(".player-info");
-  const board = document.querySelector(".board");
+  const board = document.querySelectorAll(".square");
   const boardData = gameBoard.getBoard();
   let turn = flowController.createTurn();
   let isListenerActive = true;
 
   const emptySquare = () =>
-    board.childNodes.forEach((square) => (square.textContent = ""));
+    board.forEach((square) => (square.textContent = ""));
 
   startButton.addEventListener("click", (e) => {
     e.preventDefault();
@@ -239,7 +239,7 @@ const domController = (function () {
     boardContainer.style.display = "grid";
   });
 
-  board.childNodes.forEach((square) => {
+  board.forEach((square) => {
     square.addEventListener("click", function handleMarkingSquare() {
       if (!isListenerActive) {
         flowController.resetGame();
